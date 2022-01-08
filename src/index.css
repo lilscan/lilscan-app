@@ -1,0 +1,78 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: auto;
+}
+.p-tree{
+  border: 0px 
+}
+
+.image {
+  max-height: calc(100vh - 95px);
+  max-width: 100%;
+  height: auto;
+  width: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0px;
+  border-radius: 5px;
+}
+
+.mjpeg_calib {
+  max-height: calc(100vh - 95px);
+  max-width: 100%;
+  height: auto;
+  width: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0px;
+  border-radius: 5px;
+  position: relative;
+  z-index: 1;
+}
+
+.overlay_calib {
+  top: 95px;
+  max-height: calc(100vh - 95px);
+  max-width: calc(100vw - 290px);
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0px;
+  border-radius: 5px;
+  opacity: 20%;
+  position: absolute;
+  z-index: 3;
+}
+
+.column1 {
+  float: left;
+  max-width: calc(100% - 280px);
+  min-width: 100px;
+  padding: 10px
+  }
+
+.column2 {
+  float: left;
+  width: 220px;
+  justify-content: center;
+  padding: 10px
+  }
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+  }
+
+.device_image {
+  max-height: 200px;
+  max-width: 100%;
+  height: auto;
+  width: auto;
+  display: block;
+  margin-top: 20px;
+  margin-left: 20px;
+  border-radius: 15px;
+}

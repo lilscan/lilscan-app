@@ -1,0 +1,14 @@
+├─ MIT: 49
+├─ ISC: 6
+├─ BSD-3-Clause: 2
+├─ BSD*: 2
+├─ MIT,Apache2: 2
+├─ Apache-2.0: 1
+├─ Custom: https://secure.travis-ci.org/dominictarr/event-stream.png: 1
+├─ Custom: https://github.com/FuturesJS/forEachAsync: 1
+├─ MIT,Apache License, Version 2.0: 1
+├─ UNKNOWN: 1
+├─ MIT*: 1
+├─ Unlicense: 1
+└─ BSD-2-Clause: 1
+

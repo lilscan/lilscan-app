@@ -1,0 +1,399 @@
+// gRPC interface for lilscan
+
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+package lilscan.grpc;
+service Interface
+{
+    // General status
+    rpc getInfo(google.protobuf.Empty) returns (DeviceInfo) {}
+    rpc clearMessages(google.protobuf.Empty) returns (DeviceInfo) {}
+
+    // It is required that the client keeps the event stream open.
+    // Otherwise the laser may be turned off during idle.
+    rpc streamEvents(google.protobuf.Empty) returns (stream Event) {}
+
+    // Configuration - Generic
+    rpc getParams(Params) returns (Params) {}
+    rpc setParams(Params) returns (Params) {}
+    rpc save(google.protobuf.Empty) returns (google.protobuf.Empty) {}     // save current parameters to disk
+    rpc restart(google.protobuf.Empty) returns (google.protobuf.Empty) {}  // issues a restart of the server
+
+    // Configuration - Plugins
+    // TODO REMOVE for now
+    rpc getScanDevicePlugins(google.protobuf.Empty) returns(stream ScanDevicePlugin){}
+    rpc setScanDevicePlugin(ScanDevicePlugin) returns(ScanDevicePlugin){}
+
+    // Data capturing and preview
+    rpc streamPreview(google.protobuf.Empty) returns (stream Frame) {}
+    rpc startCapture(CaptureConfig) returns (CaptureInfo) {}                    // scans or collects calibration data 
+    rpc cancelCapture(google.protobuf.Empty) returns(google.protobuf.Empty) {}
+
+    // Data handling 
+    rpc getCaptureInfo(CaptureQuery) returns (stream CaptureInfo){}
+    rpc streamData(CaptureQuery) returns(stream Data){}
+    rpc deleteData(CaptureQuery) returns (google.protobuf.Empty) {}
+}
+
+message DeviceInfo
+{
+    enum Type
+    {
+        UNKNOWN = 0;
+        LILSCAN_PI_CICLOP = 1;      // Raspberry Pi + Ciclop Controller + 2 Lasers + 1 Turntable
+    }
+    enum Status
+    {
+        UNAVAILABLE = 0;
+        ERROR = 1;                  // system error scanning is not possible - check events for error messasge
+        UNCALIBRATED = 2;
+        DISABLED = 4;
+
+        READY = 16;
+        PROCESSING = 17;
+        CALIBRATING = 18;
+        ABORTING = 19;
+    }
+    message Device
+    {
+        enum Type
+        {
+            UNKNOWN = 0;
+            CAMERA = 1;
+            LASER = 2;
+            SERVO = 3;
+        }
+        Type type = 1;
+        uint64 parent_serial= 2; // serial of the parent device 
+        uint64 serial= 3;        // serial of the device
+        uint64 version = 4;      // version of the system encode as XX.YY.ZZ.BB (X = Major, Y = Minor, Z = Revision, B=Build)
+        Status status = 5;
+        google.protobuf.Timestamp calib_timestamp = 6; // calibration timestamp
+        float calib_error = 7;       // calibration error
+    }
+
+     // general status for all systems
+    Type type = 1;           // type of the main system
+    uint64 hw_version = 2;   // hardware version 
+    uint64 sw_version = 3;   // software version encode as XX.YY.ZZ.BB (X = Major, Y = Minor, Z = Revision, B=Build)
+    Status status = 4;
+    uint32 progress = 5;     // value from 0..100 for status bar 
+
+    // sub-systems
+    repeated Device devices = 6;
+}
+
+
+// TODO send param (on param)
+/**
+ * \brief Event streamed to clients
+ */
+message Event
+{
+    enum Type
+    {
+        NONE = 0;
+        ERROR = 1;
+        MESSAGE = 2;                // User Message
+        KEEP_ALIVE = 3;
+        LOG_MESSAGE = 4;            // NOT IMPLEMENT
+        CAPTURE_STARTED = 16;
+        CAPTURE_FINISHED = 17;
+        CATPURE_CANCELLED = 18;
+        LASER1_ENABLED = 19;        // NOT IMPLEMENTED
+        LASER2_DISABLED = 20;       // NOT IMPLEMENTED
+        CAMERA_EXPOSURE = 32;
+        CAMERA_GAIN = 33;
+    }
+    Type type = 1;
+    double arg1 = 2;
+    double arg2 = 3;
+    string message = 4;
+    uint64 serial = 5;
+}
+
+/**
+ * \brief Parameters
+ */
+message Param
+{
+    enum Type
+    {
+        NONE = 0;
+
+        // Camera Control 
+        CAMERA_GAIN = 1;                    // ARG1: analog gain 1.04 ... 11
+        CAMERA_EXPOSURE = 2;                // ARG1: exposure in usec
+        CAMERA_FRAME_RATE = 3;                 
+        CAMERA_ORIENTATION = 4;             // ARG1: allowed values are [0,90,180,270] in deg
+        CAMERA_FACTORY = 5;                 // Restore camera factory settings 
+
+        // Laser Control
+        LASER_ENABLED = 16;                 // ARG1 = Laser ENABLED
+        LASER_POWER = 17;                   // ARG1 = Laser Power
+        LASER_WORKING_RANGE = 18;           // ARG1 = min range in m, ARG2 max range in m
+        LASER_FACTORY = 19;                 // Restore factroy settings for the laser
+
+        // Calibration Target Settings
+        CHECKERBOARD_SIZE = 32;             // ARG1 = cols, ARG2 = rows
+        CHECKERBOARD_FIELD_WIDTH = 33;      // ARG1 = width in m
+        SPHERE = 64;                        // ARG1 = Sphere Radius in m, ARG2 = Offset of the spehere center to the table the in m
+
+        // ScanDevice Low-Levle Control
+        SCAN_DEVICE_TARGET_POS = 222;      // NOT IMPLEMENTED ARG1 = scan device target pos in full steps; ARG2 speed in usteps/second  (always first servo is used)
+        SCAN_DEVICE_POS = 223;             // NOT IMPLEMENTED ARG1 = scan device current pos in full steps; ARG2 moving flag 
+        SCAN_DEVICE_STEP_ANGLE = 224;      // ARG1 = step angle for a full motor step in degrees
+        SCAN_DEVICE_INVERT_DIR = 225;      // ARG1 = 0 normal direction, ARG1 = 1 inverted
+
+        // Workspace settings not implementeed
+        // WORKSPACE_HEIGHT = 232;         // ARG1 = min height , ARG2 = max height
+        // WORKSPACE_WIDTH = 233;          // ARG1 = min width, ARG2 = max width
+
+        // General Settings
+        MAX_FILE_COUNT = 256;               // ARG1 = max number of scan files storred on disk before auto deletion (disabled for < 0)
+    }
+
+    Type type = 1;
+    uint64 serial= 2;                      // Optional serial of the device being controlled - 0 = default
+    double arg1 = 3;
+    double arg2 = 4;
+}
+
+message Params
+{
+    repeated Param params = 1;
+}
+
+message CaptureConfig
+{
+    enum Mode
+    {
+        NONE = 0;
+        PHOTO_RAW = 1;
+        PHOTO_JPEG = 2;
+        PHOTO_CALIBRATION = 3;                  // collect a pose image for camera calibartion
+        CAMERA_CALIBRATION = 4;                 // callibrate camera based on collected calibration photos
+        LASER_CALIBRATION = 5;                  // callibrate laser based on sphere target
+        PROFILE_SINGLE_RAW = 8;                 // camera coordinate system
+        PROFILE_SINGLE = 9;                     // profiler coordinate system
+        SCAN_CALIBRATION = 16;                  // calibrate laser and scan device pose via sphere target
+        SCAN = 32;
+    }
+
+    Mode mode = 1;
+    string name = 2;                   // optional name (default is "" --> "scan")
+    uint32 id = 3;                     // optional unique id of the capture  (default = 0 --> next free id)
+    uint32 pose_id = 4;                // pose id of the capture (for calibraton use 1,2,3,4 to tag the four required poses)
+    uint64 camera_serial= 5;           // set to 0 to use first available camera 
+    double camera_exposure = 6;        // not implemented
+    double camera_gain= 7;
+    repeated uint64 laser_serial = 8;  // leave empty to use first available laser, use multiple serials to take a multi-laser scan
+    repeated double laser_power = 9;   // Laser power 0..100, leave empty or set to zero to scan with no laser enabled
+
+    // only used for SCAN  
+    uint64 servo_serial= 10;           // set to 0 to use first available servo
+    double start_pos = 11;             // optional start pos [0..1]  (start servo step = start_pos*total_steps)
+    double end_pos = 12;               // optional end pos [0..1]
+    double scan_speed = 13;            // optional speed factor 
+}
+
+message CaptureQuery
+{
+    uint32 id = 1;                     // optional capture id (set to 0 to select all, set to -1 to select last one) 
+    uint32 pose_id = 2;                // optional pose id (set to 0 to select all)
+    bool ply = 3;                      // include pointclouds into the query
+    bool photo = 4;                    // include texture or photo files into the query
+    bool calib = 5;                    // include calibration files into the query
+    bool unfinished= 6;                // return unfinised captures
+    bool preview = 7;                  // return preview
+    string location = 8;               // optional file location which must match
+    bool file_chunks = 9;              // stream data as file chunks e.g. ply files
+}
+
+/**
+ * \brief Image Frame
+ */
+message Frame
+{
+     enum Type
+     {
+         UNKNOWN = 0;
+         YUV420p = 1;
+         JPEG = 2;
+         BGGR = 3;
+         RGGB = 4;
+         GBRG= 5;
+         GRBG= 6;
+         BGGR10 = 7;
+         RGGB10 = 8;
+         GBRG10= 9;
+         GRBG10= 10;
+         BGGR16 = 11;
+         RGGB16 = 12;
+         GBRG16= 13;
+         GRBG16= 14;
+         RGB = 15;
+         BGR = 16;
+         LASER_V1 = 64;
+         LASER_HPROFILER_V1= 128;
+         LASER_VPROFILER_V1= 129;
+     }
+     enum Flag
+     {
+        NONE = 0;
+        CAM_CALIB_POSE1 = 1;            // pose for camera calibration
+        CAM_CALIB_POSE2 = 2;        
+        CAM_CALIB_POSE3 = 4;
+        CAM_CALIB_POSE4 = 8;
+        CAM_CALIB_POSE  = 16;
+        LASER_CALIB_POSE1 = 32;
+        LASER_CALIB_POSE2 = 64;
+        LASER_CALIB_POSE3 = 128;
+        LASER_CALIB_POSE4 = 256;
+        TARGET_FOUND = 512;
+        TARGET_TOO_DARK = 1024;
+        TARGET_TOO_BRIGHT = 2048;
+        TARGET_UNSHARP = 4096;
+        TARGET_WRONG_POSE = 8192;
+        LASER1_ON = 16384;              // used to flag data for first projector
+        LASER2_ON = 32768;              // used to flag data for second projector
+        LIGHT_ON = 65536;
+        NOISE = 131072;
+        TEXTURE =262144;
+        TURNTABLE_CALIB_POSE =524288;
+        PREVIEW = 108576;
+     }
+    message Pose
+    {
+        double tx=1;
+        double ty=2;
+        double tz=3;
+        double rx=4;
+        double ry=5;
+        double rz=6;
+    }
+
+     Type type = 1;
+     uint64 id = 2;
+     google.protobuf.Timestamp timestamp = 3;
+     google.protobuf.Duration exposure  = 4;
+     double gain = 5;
+     float laser_power = 6; // power of the laser
+     float light_power = 7; // power of the led light
+     uint32 width = 8;
+     uint32 height = 9;
+     uint32 channels = 10;
+     uint32 crop_width = 11;
+     uint32 crop_height = 12;
+     Pose pose = 13;       // Optional camera pose 
+     double pose_step = 14;
+     bytes data = 16;      // Image Data
+     uint32 flags = 17;
+     uint64 serial= 18;         // serial number of the camera
+     uint64 laser_serial= 19;   // serial number of the laser
+}
+
+
+message CaptureInfo
+{
+    enum Status
+    {
+        UNKNOWN = 0;
+        QUEUED = 1;
+        SCANNING = 2;
+        PROCESSING = 3;
+        FINISHED = 4;
+        ERROR = 5;
+    }
+    enum Type
+    {
+        NONE = 0;
+        PLY = 1;
+        TAR = 2;
+        BIN = 3;
+        JPEG = 4;
+    }
+    Type type = 1;
+    Status status = 2;
+    string error_msg = 3;
+    repeated string locations = 4;      // files storred on the hard disk
+    uint32 frame_count = 5;
+    CaptureConfig config = 6;
+    Frame preview = 7;                  // Optional preview if select in CaptureQuery
+}
+
+message Profile
+{
+    message Point3d
+    {
+        double x = 1;
+        double y = 2;
+        double z = 3;
+        double response = 4;
+        double stdev = 5;
+    }
+    message Vec3d 
+    {
+        double nx = 1;
+        double ny = 2;
+        double nz = 3;
+    }
+
+    uint64 id = 1;
+    repeated Point3d points3d = 2;
+    google.protobuf.Timestamp timestamp = 3;
+    google.protobuf.Duration exposure  = 4;
+    double gain = 5;
+    float laser_power = 6;      // power of the laser
+    float light_power = 7;      // power of the led light
+    repeated Vec3d normals = 8; // normal for each point
+    uint32 part_id = 9;         // part id
+    uint32 part_count = 10;     // number of total parts
+    uint32 total_point_count = 11;     // number of total 3d points
+}
+
+message FileChunk
+{
+    uint32 part_id = 1;         // part id
+    uint32 part_count = 2;      // number of total parts
+    bytes data = 3;
+}
+
+message Data
+{
+    CaptureInfo info = 1;
+    oneof payload 
+    {
+         Frame frame = 2;
+         Profile profile = 3;
+         FileChunk file = 4;
+    }
+}
+
+// ScanDevice for controlling the motion of the profiler while scanning:
+// TOOD can we remove this?
+message ScanDevicePlugin
+{
+    enum Type
+    {
+        UNKNOWN = 0;
+        GRPC = 1;
+        PI = 2;
+        PICO = 3;
+        CICLOP = 4;
+    }
+
+    Type type = 1;
+    uint64 serial = 2;          // serial number of the scan device (optional to select a specifc plugin)
+    uint64 version = 3;         // version of the system encode as XX.YY.ZZ.BB (X = Major, Y = Minor, Z = Revision, B=Build) (optional to select a specfic version)
+    string name = 4;            // Display name of the device.
+    string cmd = 5;             // Optional command to start the scan device. If not given it is assumed the service is already reachable.
+    string args = 6;            // Optional arguments when the service is started.
+    string uri = 7;             // optional URI of a server.
+    bool enabled = 8;           // Indicates if the service is or is supposed to be activated.
+    string tooltip = 9;         // optional tooltip for the plugin 
+    bool singleton = 10;        // supports only a single instance
+}
