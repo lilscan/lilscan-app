@@ -1,6 +1,6 @@
 # Overview
 
-LilScan-App is a graphical interface for [LilScan](www.lilscan.com), a  DIY 3D laser scanner. 
+LilScan-App is a graphical interface for [LilScan](http://www.lilscan.com), a  DIY 3D laser scanner. 
 It is designed for Students, Hobbyists, and Makers to learn the fundamentals of 3D sensing and point 
 cloud processing by building their own 3D scanner.
 
@@ -19,4 +19,4 @@ The app is based on [Electron](https://www.electronjs.org) and runs on Windows, 
 Pre-compiled binaries can be downloaded from the [release page](https://github.com/lilscan/lilscan-app/releases).
 
 # Usage 
-For more information about building a LilScan 3D Scanner and how to use the application, please visit [lilscan.com](lilscan.com).
+For more information about building a LilScan 3D Scanner and how to use the application, please visit [lilscan.com](http://www.lilscan.com).
