@@ -1,6 +1,6 @@
 # Overview
 
-LilScan-App is a graphical interface for [LilScan](www.lilscan.com), a  DIY 3D laser scanner running on a Raspberry Pi. 
+LilScan-App is a graphical interface for [LilScan](www.lilscan.com), a  DIY 3D laser scanner. 
 It is designed for Students, Hobbyists, and Makers to learn the fundamentals of 3D sensing and point 
 cloud processing by building their own 3D scanner.
 
