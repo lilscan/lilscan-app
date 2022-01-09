@@ -4,7 +4,7 @@ LilScan-App is a graphical interface for [LilScan](http://www.lilscan.com), a  D
 It is designed for Students, Hobbyists, and Makers to learn the fundamentals of 3D sensing and point 
 cloud processing by building their own 3D scanner.
 
-The LilScan-App allows controlling multiple headless LilScan 3D scanners connected to a local network. The app includes the following features:
+The LilScan-App allows controlling multiple headless LilScan 3D scanners connected to the same local network. The app includes the following features:
 
  * Connecting to 3D scanners
  * Control the embedded camera and lasers
