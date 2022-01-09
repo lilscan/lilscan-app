@@ -19,4 +19,4 @@ The app is based on [Electron](https://www.electronjs.org) and runs on Windows, 
 Pre-compiled binaries can be downloaded from the [release page](https://github.com/lilscan/lilscan-app/releases).
 
 # Usage 
-After the app has been started, it can be connected to a LilScan 3D Laser Scanner by entering its local IP-Addresse. For more information about building a LilScan 3D Scanner and how to use the application, please visit [lilscan.com](http://www.lilscan.com).
+After the app has been started, it can be connected to a LilScan 3D Laser Scanner by entering its local IP-Address. For more information about building a LilScan 3D Scanner and how to use the application, please visit [lilscan.com](http://www.lilscan.com).
