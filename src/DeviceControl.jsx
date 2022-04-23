@@ -112,7 +112,7 @@ export function DeviceControl(props) {
 		})
 	}
 
-	const handleCalibrate= () => {
+	const handleScan= (mode,speed) => {
 		if(props.device_state.bussy === true) {
 			props.stub.cancelCapture({}, function (err, params) {
 				if (err) {
@@ -122,28 +122,7 @@ export function DeviceControl(props) {
 			});
 		}
 		else{
-			let request = { mode: "SCAN_CALIBRATION", laser_serial: laser_serials, laser_power: new Array(laser_serials.length).fill(100), scan_speed: 4}
-			console.log("start calibration: ",request)
-			props.stub.startCapture(request, function (err, params) {
-				if (err) {
-					console.log("error" + err)
-				} else {
-				}
-			});
-		}
-	}
-
-	const handleScan= () => {
-		if(props.device_state.bussy === true) {
-			props.stub.cancelCapture({}, function (err, params) {
-				if (err) {
-					console.log("error" + err)
-				} else {
-				}
-			});
-		}
-		else{
-			let request = { mode: scan_mode, laser_serial: laser_serials, laser_power: new Array(laser_serials.length).fill(100),scan_speed: scan_speed}
+			let request = { mode: mode, laser_serial: laser_serials, laser_power: new Array(laser_serials.length).fill(100),scan_speed: speed}
 			props.stub.startCapture(request, function (err, params) {
 				if (err) {
 					console.log("error" + err)
@@ -309,6 +288,7 @@ export function DeviceControl(props) {
 						>
 							<MenuItem value={"PROFILE_SINGLE"}>Single Line</MenuItem>
 							<MenuItem value={"SCAN"} disabled={servo_serials.length === 0}>3D Scan</MenuItem>
+							<MenuItem value={"SCAN_DENSE"} disabled={servo_serials.length === 0}>3D Scan</MenuItem>
 						</Select>
 					</FormControl>
 				</React.Fragment>
@@ -330,7 +310,7 @@ export function DeviceControl(props) {
 			{props.children}
 			{props.scan &&
 				<React.Fragment>
-					<Button onClick={handleScan} disabled={laser_serials.length == 0} variant="contained" size="medium" color="primary" style={{ marginTop: "40px", width: "100%" }}>
+					<Button onClick={() => handleScan(scan_mode,scan_speed)} disabled={laser_serials.length == 0} variant="contained" size="medium" color="primary" style={{ marginTop: "40px", width: "100%" }}>
 						{props.device_state.bussy === true ? <div>Abort Scan</div> : <div>Start Scan</div>}
 					</Button>
 					<Button onClick={handleDownload} disabled={props.device_state.bussy === true } variant="outlined" size="medium" color="primary" style={{ "width": "100%", "marginTop": "10px" }}>
@@ -340,8 +320,11 @@ export function DeviceControl(props) {
 			}
 			{props.calibrate &&
 				<React.Fragment>
-					<Button onClick={handleCalibrate} variant="contained" size="medium" color="primary" style={{ marginTop: "40px", width: "100%" }}>
+					<Button onClick={() => handleScan("SCAN_CALIBRATION",4)} variant="contained" size="medium" color="primary" style={{ marginTop: "40px", width: "100%" }}>
 						{props.device_state.bussy === true ? <div>Abort Calibration</div> : <div>Start Calibration</div>}
+					</Button>
+					<Button onClick={() => handleScan("SCAN_REFINEMENT",4)} disabled={!props.device_state.calibrated} variant="contained" size="medium" color="primary" style={{ marginTop: "10px", width: "100%" }}>
+						{props.device_state.bussy === true ? <div>Abort Scan</div> : <div>Start Refinement</div>}
 					</Button>
 				</React.Fragment>
 			}

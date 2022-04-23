@@ -180,7 +180,9 @@ message CaptureConfig
         PROFILE_SINGLE_RAW = 8;                 // camera coordinate system
         PROFILE_SINGLE = 9;                     // profiler coordinate system
         SCAN_CALIBRATION = 16;                  // calibrate laser and scan device pose via sphere target
+        SCAN_REFINEMENT = 17;              
         SCAN = 32;
+        SCAN_DENSE = 33;
     }
 
     Mode mode = 1;
