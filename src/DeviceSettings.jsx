@@ -159,13 +159,15 @@ export function DeviceSettings(props) {
 					// call install script and finish up
 					// the /tmp data are deleted with the next reboot
 					console.log("call install script")
-					sshCommand(action, `echo "${action.password}" | sudo -S  tr -d '\015' </tmp/pi4_install_snap.sh >/tmp/pi4_install_snap.sh && bash /tmp/pi4_install_snap.sh`, (data) => {
+					sshCommand(action, `sed -i 's/\r//g' /tmp/pi4_install_snap.sh && echo "${action.password}" | sudo -S bash /tmp/pi4_install_snap.sh`, (data) => {
 						setProgressOpen(false)
 						enqueueSnackbar("Installing Firmware Finished. It can take up to 2 minutes untile the device rebooted.", { variant: 'success', persist: false })
 					},
 					(err) => {
 						setProgressOpen(false)
-						enqueueSnackbar("Failed installing LilScan on the device: " + err, { variant: 'error', persist: true, action: button_dismiss })
+						if(err.message != "Keepalive timeout"){
+							enqueueSnackbar("Failed installing LilScan on the device: " + err + err.code, { variant: 'error', persist: true, action: button_dismiss })
+						}
 					})
 				})
 			})

@@ -29,6 +29,7 @@ global.sshCommand = function(credentials,command,onData,onError){
     const client = new Client();
     let total_data = ""
     let total_error = ""
+    credentials['keepaliveInterval'] = 2000
     client.on('ready', () => {
         client.exec(command, (err, stream) => {
             if (err){

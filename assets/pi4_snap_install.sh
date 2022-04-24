@@ -54,4 +54,4 @@ systemctl start pigpiod
 snap install lilscan --devmode
 
 # reboot if config.txt has changed
-cmp --silent /boot/config.txt /boot/config.bak || (echo "reboot system" && reboot)
+cmp --silent /boot/config.txt /boot/config.bak || (echo "reboot system" && shutdown -r now)
